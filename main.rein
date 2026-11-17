@@ -1,0 +1,68 @@
+interface Input {
+  /** The link of the pull request to ask a human to review. */
+  pr: string;
+}
+
+interface Pr {
+  /** The owner and repo, such as owner/repo. */
+  repo: string;
+  /** The title of the pull request. */
+  title: string;
+  /** The Jira key, such as ABC-123, or none. */
+  jira: string;
+  /** The login of the author. */
+  author: string;
+  /** The CODEOWNERS teams of the changed files, or none. */
+  teams: string;
+  /** The logins of the requested reviewers, or none. */
+  reviewers: string;
+  /** The head commit sha. */
+  sha: string;
+}
+
+interface Guard {
+  /** Does this head already have a review request comment? */
+  already_asked: boolean;
+  /** Is there a human approval after the last push? */
+  approved: boolean;
+}
+
+interface Found {
+  /** Is at least one channel chosen? */
+  found: boolean;
+  /** The chosen channels as name (id), separated by semicolons, or none. */
+  channels: string;
+}
+
+/**
+ * Ask a human for a review of a pull request on Slack. The program posts
+ * only when pr-handling calls it, and at most once per head.
+ */
+export default async function main({ pr }: Input) {
+  /** The facts of the pull request that the request needs. */
+  const info: Pr = await request(@./read_pr(pr=pr));
+
+  /** Does this head already have a request, or a human approval after the
+   * last push? */
+  const guard: Guard = await request(@./check_guards(pr=pr, sha=info.sha));
+
+  if (guard.already_asked) {
+    return `Return: already asked for ${pr} at this head.`;
+  }
+
+  if (guard.approved) {
+    return `Return: not needed for ${pr}: a human approved it.`;
+  }
+
+  /** The channels to ask, found at run time. */
+  const found: Found = await request(@./find_channels(pr=pr, repo=info.repo,
+    teams=info.teams));
+
+  if (!found.found) {
+    return `Return: no channel for ${pr}. Nothing posted.`;
+  }
+
+  return @./post_and_record(pr=pr, title=info.title,
+    reviewers=info.reviewers, teams=info.teams, sha=info.sha,
+    channels=found.channels);
+}

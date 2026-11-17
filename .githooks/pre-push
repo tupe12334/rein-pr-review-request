@@ -1,0 +1,6 @@
+#!/bin/sh
+command -v rein >/dev/null ||
+  { echo "rein not found; install it to push"; exit 1; }
+rein check . || exit $?
+sh "$(dirname "$0")/../scripts/walks.sh" || exit $?
+shellcheck "$(dirname "$0")/../scripts/walks.sh"

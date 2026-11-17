@@ -1,0 +1,19 @@
+interface Input {
+  /** The link of the pull request to read. */
+  pr: string;
+}
+
+/**
+ * The text that reads the facts of a pull request that a review request
+ * needs. It changes nothing.
+ */
+export default function readPr({ pr }: Input) {
+  return `Read ${pr} with gh pr view ${pr} --json title,author,headRefOid,
+  headRefName,body,reviewRequests. Answer repo: the owner and repo name, as
+  owner/name. Answer jira: the Jira key in the title, the branch name or the
+  body, such as ABC-123, or none. Answer author: the login of the author.
+  Answer teams: the CODEOWNERS teams that own the changed files, read from
+  .github/CODEOWNERS or CODEOWNERS, as @org/team separated by spaces, or
+  none. Answer reviewers: the logins of the requested reviewers separated by
+  spaces, or none. Answer sha: the head commit sha. Change nothing.`;
+}

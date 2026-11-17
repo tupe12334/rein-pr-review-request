@@ -1,0 +1,22 @@
+{
+  "name": "pr-review-request",
+  "version": "0.1.0",
+  "description": "Ask a human for a review of a pull request on Slack, in the channels that take review requests.",
+  "license": "MIT",
+  "repository": "github:tupe12334/rein-pr-review-request",
+  "keywords": [
+    "rein",
+    "slack",
+    "pull-requests",
+    "code-review"
+  ],
+  "files": [
+    "**/*.rein",
+    "scripts/",
+    "README.md",
+    "rein.json"
+  ],
+  "engines": {
+    "rein": "^0.1.0"
+  }
+}
