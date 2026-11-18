@@ -20,7 +20,7 @@ APPROVED='main.guard={"already_asked":false,"asked_before":true,"reasked":false,
 TEAM_YES='ask_team.team={"found":true,"team":"platform"}'
 TEAM_NO='ask_team.team={"found":false,"team":"none"}'
 OTHER_NO='ask_team.other={"required":false,"other":"none","reason":"none"}'
-OTHER_YES='ask_team.other={"required":true,"other":"@owner/create-team","reason":"code-owner review by @owner/create-team is required for src/b.ts"}'
+OTHER_YES='ask_team.other={"required":true,"other":"create-team","reason":"code-owner review by @owner/create-team is required for src/b.ts"}'
 BATCH='ask_team/find_and_post.batch={"prs":"https://github.com/owner/repo/pull/9 0123;https://github.com/owner/repo/pull/10 aaaa","label":"ABC-9 Story"}'
 OWN_YES='ask_team/find_and_post.own={"found":true,"channel":"team-platform-prs (C123)","group":"<!subteam^S1>"}'
 OWN_NO='ask_team/find_and_post.own={"found":false,"channel":"none","group":"none"}'
@@ -215,8 +215,23 @@ expect "a required other team names the reason in the post" \
   --answer "$PLACE_YES" --answer "$NOT_ASKED" --answer "$TEAM_YES" \
   --answer "$OTHER_YES" --answer "$OWN_YES" --answer "$BATCH" \
   --answer "$EXTRA_YES"
+expect "a required other team is searched by its bare name" \
+  'team-create-team-prs or create-team-prs' --answer "$INFO" \
+  --answer "$PLACE_YES" --answer "$NOT_ASKED" --answer "$TEAM_YES" \
+  --answer "$OTHER_YES" --answer "$OWN_YES" --answer "$BATCH"
+expect "the other team is named without its org" 'without the org' \
+  --answer "$INFO" --answer "$PLACE_YES" --answer "$NOT_ASKED" \
+  --answer "$TEAM_YES"
+expect "a story keeps only siblings with no request at any head" \
+  'at any head, and' --answer "$INFO" --answer "$PLACE_YES" \
+  --answer "$NOT_ASKED" --answer "$TEAM_YES" --answer "$OTHER_NO" \
+  --answer "$OWN_YES"
+expect "a story keeps only siblings of the same review team" \
+  'Jira Team Name is the same team as platform' --answer "$INFO" \
+  --answer "$PLACE_YES" --answer "$NOT_ASKED" --answer "$TEAM_YES" \
+  --answer "$OTHER_NO" --answer "$OWN_YES"
 expect "a required other team with no channel posts nothing" \
-  'Return: no channel for @owner/create-team' --answer "$INFO" \
+  'Return: no channel for create-team' --answer "$INFO" \
   --answer "$PLACE_YES" --answer "$NOT_ASKED" --answer "$TEAM_YES" \
   --answer "$OTHER_YES" --answer "$OWN_YES" --answer "$BATCH" \
   --answer "$EXTRA_NO"

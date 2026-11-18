@@ -19,7 +19,7 @@ const asked: string = await @pr-review-request/main(pr=<pull request link>);
 
 - `pr`: the link of the pull request.
 
-The answer is one line: `not workplace`, `already asked`, `not needed`, `already re-asked`, `re-asked`, `no team`, `no channel`, `posted yes`, or `posted no`, with the links of each post.
+The answer is one line: `not workplace`, `already asked`, `not needed`, `already re-asked`, `re-asked`, `re-ask failed`, `no team`, `no channel`, `posted yes`, or `posted no`, with the links of each post.
 
 ## Flow
 
@@ -32,7 +32,7 @@ The answer is one line: `not workplace`, `already asked`, `not needed`, `already
 4. The review team is the Jira Team Name of the ticket. When the ticket has none, it is the team of the author, from the `*-prs` channels the author posts in (`ask_team/find_team.rein`). No team answers `no team`.
 5. The other team is asked only when its approval is required to merge (`ask_team/check_other_team.rein`). Three things must hold: a ruleset rule has `require_code_owner_review` true, a changed file is owned by that team in CODEOWNERS, and the review team does not own that file. Then the reason is named in the post.
 6. The channel of the review team is found at run time (`ask_team/find_and_post/find_channel.rein`). It is named `team-<team>-prs` or `<team>-prs`. Its purpose is read, and its Slack user group is the `<!subteam^…>` mention of its past posts. No channel or group is written in the program. When the other team is required, its channel is found the same way. A missing channel answers `no channel` and posts nothing.
-7. The PRs are batched by story (`ask_team/find_and_post/find_story.rein`). Each open PR of the same Jira story that waits for review gets one message, which lists its PRs. A PR with no story gets one message for itself.
+7. The PRs are batched by story (`ask_team/find_and_post/find_story.rein`). Each open PR of the same Jira story gets one message, which lists its PRs, when it has the same review team, no request at any head, and no other team required. A PR with no story gets one message for itself.
 8. Each post is recorded on each PR as a comment: `🤖 Review requested in <#channel> (<permalink>) at <sha>` (`ask_team/find_and_post/post_and_record/record_request.rein`).
 
 ## Outward action

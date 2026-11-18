@@ -27,7 +27,8 @@ export default function checkOtherTeam({ pr, repo, base, owners, team }:
   ${team} does not own it, so the approval of ${team} cannot satisfy the
   rule for that file. Compare team names in lower case, without the org.
   Answer required yes only when such a file exists and the rule holds, and
-  no otherwise. Answer other: the other team as @org/team, or none. Answer
-  reason: one line that says code-owner review by that team is required for
-  the files, or none. Change nothing. Post nothing.`;
+  no otherwise. Answer other: the other team's name without the org, such as
+  create-team, or none. Answer reason: one line that says code-owner review
+  by that team is required for the files, or none. Change nothing.
+  Post nothing.`;
 }

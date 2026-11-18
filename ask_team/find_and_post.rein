@@ -13,7 +13,7 @@ interface Input {
   sha: string;
   /** Is the approval of another team required to merge? */
   required: boolean;
-  /** The other team as @org/team, or none. */
+  /** The other team's name without the org, such as create-team, or none. */
   other: string;
   /** Why that approval is required, in one line, or none. */
   reason: string;
@@ -52,7 +52,8 @@ export default async function findAndPost({ pr, title, repo, story, team,
 
   /** The PRs of the story that wait for review, or this PR alone. */
   const batch: Batch = await request(
-    @./find_and_post/find_story(pr=pr, repo=repo, story=story, sha=sha));
+    @./find_and_post/find_story(pr=pr, repo=repo, story=story, sha=sha,
+    team=team));
 
   if (!required) {
     return @./find_and_post/post_and_record(title=title, reason=reason,

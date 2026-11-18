@@ -7,6 +7,8 @@ interface Input {
   story: string;
   /** The head commit sha of the pull request. */
   sha: string;
+  /** The review team of the pull request, such as platform. */
+  team: string;
 }
 
 /**
@@ -15,13 +17,15 @@ interface Input {
  * head yet. Without a story, only the pull request itself. It changes
  * nothing and posts nothing.
  */
-export default function findStory({ pr, repo, story, sha }: Input) {
+export default function findStory({ pr, repo, story, sha, team }: Input) {
   return `List the pull requests to ask in one message. When ${story} is
   none, answer prs with ${pr} ${sha} and label none. Otherwise search the
   open, non-draft pull requests of ${repo} whose title, branch or body names
   ${story} (gh pr list --repo ${repo} --state open --json). Keep each one
-  that has no approval and no "🤖 Review requested in" comment at its head.
-  Always keep ${pr}. Answer prs: each kept PR as url sha, with its head
+  that has no approval, no "🤖 Review requested in" comment at any head, and
+  whose Jira Team Name is the same team as ${team}. Drop a PR whose changed
+  files need another team's code-owner approval. Always keep ${pr}. Answer
+  prs: each kept PR as url sha, with its head
   commit sha, separated by semicolons. Answer label: the title of ${story}
   as written in Jira, or ${story} when it cannot be read. Change nothing.
   Post nothing.`;
