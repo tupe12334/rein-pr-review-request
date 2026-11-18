@@ -44,11 +44,11 @@ interface Found {
   group: string;
 }
 
-interface Posted {
-  /** Did the post succeed and get recorded on the PR? */
+interface Logged {
+  /** Did the post succeed? */
   posted: boolean;
-  /** Each post as <#channel> (<permalink>), separated by semicolons. */
-  links: string;
+  /** Was the request recorded on the PR? */
+  recorded: boolean;
 }
 
 /**
@@ -63,7 +63,7 @@ export default async function askOther({ pr, title, repo, jira, author,
     author=author));
 
   if (!team.found) {
-    return `Return: already asked for ${pr} at this head.`;
+    return `Return: no team for ${pr}. Nothing asked.`;
   }
 
   /** The first required team that is not asked at this head, if any. */
@@ -82,14 +82,14 @@ export default async function askOther({ pr, title, repo, jira, author,
     return @./ask_other/no_channel(pr=pr, team=other.other);
   }
 
-  /** The team is asked for this head, in its own channel. */
-  const posted: Posted = await @./ask_team/find_and_post/post_and_record(
-    title=title, reason=other.reason, prs=`${pr} ${sha}`, label=`none`,
-    channels=extra.channel, groups=extra.group, team=other.other);
+  /** The post of the team's request, then its record on the PR. */
+  const logged: Logged = await request(
+    @./ask_team/find_and_post/post_team(title=title, reason=other.reason,
+    prs=`${pr} ${sha}`, label=`none`, channels=extra.channel,
+    groups=extra.group, team=other.other));
 
-  if (!posted.posted) {
-    return `Return: post for ${other.other} failed for ${pr}. Nothing
-    recorded.`;
+  if (!logged.recorded) {
+    return `Return: post or record for ${other.other} failed for ${pr}.`;
   }
 
   return `Return: asked ${other.other} for ${pr} at ${sha}.`;

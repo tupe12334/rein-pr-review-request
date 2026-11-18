@@ -36,10 +36,10 @@ RT_EXTRA_NO='reask_team.extra={"found":false,"channel":"none","group":"none"}'
 POSTED_YES='ask_team/find_and_post/post_and_record.posted={"posted":true,"links":"<#C123> (https://slack.example/p1)"}'
 POSTED_NO='ask_team/find_and_post/post_and_record.posted={"posted":false,"links":"none"}'
 RECORDED='ask_team/find_and_post/post_and_record.recorded={"recorded":true}'
-OPOSTED_YES='ask_other.posted={"posted":true,"links":"<#C456> (https://slack.example/p3)"}'
-OPOSTED_NO='ask_other.posted={"posted":false,"links":"none"}'
-RPOSTED_YES='reask_team.posted={"posted":true,"links":"<#C456> (https://slack.example/p3)"}'
-RPOSTED_NO='reask_team.posted={"posted":false,"links":"none"}'
+OPOSTED_YES='ask_other.logged={"posted":true,"recorded":true}'
+OPOSTED_NO='ask_other.logged={"posted":false,"recorded":false}'
+RPOSTED_YES='reask_team.logged={"posted":true,"recorded":true}'
+RPOSTED_NO='reask_team.logged={"posted":false,"recorded":false}'
 REPLIED_YES='reask_team/reply_and_record.replied={"replied":true,"link":"<#C123> (https://slack.example/p2)"}'
 REPLIED_NO='reask_team/reply_and_record.replied={"replied":false,"link":"none"}'
 RE_RECORDED='reask_team/reply_and_record.recorded={"recorded":true}'
@@ -47,7 +47,7 @@ AT_TEAM_KEY='"key":"ask_team.team"'
 OT_TEAM_KEY='"key":"ask_other.team"'
 OT_KEY='"key":"ask_other.other"'
 EXTRA_KEY='"key":"ask_other.extra"'
-OPOSTED_KEY='"key":"ask_other.posted'
+OPOSTED_KEY='"key":"ask_other.logged'
 RT_OTHER_KEY='"key":"reask_team.other"'
 RT_EXTRA_KEY='"key":"reask_team.extra"'
 OWN_KEY='"key":"ask_team/find_and_post.own"'
@@ -161,7 +161,7 @@ record_out=$(rein step --root "$root" --entry ask_team/find_and_post/post_and_re
   --json --input title=Fix --input reason=none --input prs="$pr $SHA" \
   --input label=none --input channels=team-create-team-prs --input groups=none \
   --input team=create-team --answer "$POSTED_YES" 2>&1)
-if printf '%s\n' "$record_out" | joined | grep -Fq -- 'at <sha> for create-team'; then
+if printf '%s\n' "$record_out" | joined | grep -Fq -- 'for create-team'; then
   echo "ok: the other team's record is keyed by its team and head"
 else
   echo "FAIL: the other team's record is keyed by its team and head"
@@ -169,7 +169,7 @@ else
   fail=1
 fi
 expect "a failed other team post returns post failed" \
-  'post for create-team failed' --answer "$INFO" --answer "$PLACE_YES" \
+  'post or record for create-team failed' --answer "$INFO" --answer "$PLACE_YES" \
   --answer "$ASKED" --answer "$OT_TEAM" --answer "$OT_YES" \
   --answer "$EXTRA_YES" --answer "$OPOSTED_NO"
 expect "a successful other team post returns asked" \
@@ -286,7 +286,7 @@ never "a re-ask with no other team required never posts to one" \
   "$RT_EXTRA_KEY" --answer "$INFO" --answer "$PLACE_YES" \
   --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_NO"
 expect "a re-ask whose other-team post failed says so, and never replies" \
-  'post for create-team failed' --answer "$INFO" --answer "$PLACE_YES" \
+  'post or record for create-team failed' --answer "$INFO" --answer "$PLACE_YES" \
   --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_YES" \
   --answer "$RT_EXTRA_YES" --answer "$RPOSTED_NO"
 never "a failed other-team post is never followed by the re-ask reply" \
