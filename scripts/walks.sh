@@ -116,11 +116,11 @@ expect "a re-ask at this head runs once per head" 'already re-asked' \
   --answer "$INFO" --answer "$PLACE_YES" --answer "$REASKED"
 never "a re-ask at this head never replies again" "$REPLY_KEY" \
   --answer "$INFO" --answer "$PLACE_YES" --answer "$REASKED"
-expect "a dismissal before the last request does not re-ask" \
+expect "the guard reads a dismissal only after the last request" \
   'was submitted after the last comment that last_post' --answer "$INFO" \
   --answer "$PLACE_YES"
-expect "a re-ask reply goes to the first request's thread" \
-  'the permalink from' --answer "$INFO" --answer "$PLACE_YES" \
+expect "the re-ask reply names the first request thread text" \
+  'of each first request' --answer "$INFO" --answer "$PLACE_YES" \
   --answer "$CHANGED"
 expect "a successful re-ask records it on the PR" 'Re-asked at 0123' \
   --answer "$INFO" --answer "$PLACE_YES" --answer "$CHANGED" \

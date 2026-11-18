@@ -15,5 +15,6 @@ export default function readPr({ pr }: Input) {
   Answer teams: the CODEOWNERS teams that own the changed files, read from
   .github/CODEOWNERS or CODEOWNERS, as @org/team separated by spaces, or
   none. Answer reviewers: the logins of the requested reviewers separated by
-  spaces, or none. Answer sha: the head commit sha. Change nothing.`;
+  spaces, or none. Answer title: the title of the pull request, as written.
+  Answer sha: the head commit sha. Change nothing.`;
 }

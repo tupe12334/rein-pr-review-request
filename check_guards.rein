@@ -20,8 +20,10 @@ export default function checkGuards({ pr, sha }: Input) {
   in" or "🤖 Re-asked at", at any head. Otherwise answer asked_before no.
   Answer reasked yes only if a comment by login starts with "🤖 Re-asked at"
   and names the head sha ${sha}. Otherwise answer reasked no. Answer
-  thread: the full text of the first comment by login that starts with
-  "🤖 Review requested in", or none. Answer last_post: the full text of the
+  thread: for each channel that a comment by login starts with
+  "🤖 Review requested in" names, the full text of the first such comment for
+  that channel, separated by semicolons, or none. Answer last_post: the full
+  text of the
   last comment by login that starts with "🤖 Review requested in" or "🤖
   Re-asked at", or none. Answer dismissed yes only if a review by a human has
   state DISMISSED and was submitted after the last comment that last_post
