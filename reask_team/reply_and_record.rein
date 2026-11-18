@@ -1,0 +1,52 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The head commit sha that is asked again. */
+  sha: string;
+  /** What changed since the asked head, in one line. */
+  changed: string;
+  /** The first review request comment, the thread root. */
+  thread: string;
+}
+
+interface Replied {
+  /** Was the reply posted in the Slack thread? */
+  replied: boolean;
+  /** The reply as <#channel> (<permalink>), or none. */
+  link: string;
+}
+
+interface Recorded {
+  /** Was the re-ask recorded on the PR? */
+  recorded: boolean;
+}
+
+/**
+ * Reply in the Slack thread of the first request, because the head changed
+ * or an approval was dismissed. Then record the re-ask on the PR. A failed
+ * reply records nothing.
+ */
+export default async function replyAndRecord({ pr, sha, changed, thread }:
+  Input) {
+  /** The reply in the thread. */
+  const replied: Replied = await request(
+    @./reply_and_record/reply_request(pr=pr, sha=sha, changed=changed,
+    thread=thread));
+
+  if (!replied.replied) {
+    return `Return: re-ask failed for ${pr}: the thread reply was not
+    posted. Nothing recorded.`;
+  }
+
+  /** The comment that records the re-ask on the PR. */
+  const recorded: Recorded = await request(
+    @./reply_and_record/record_request(pr=pr, sha=sha, changed=changed,
+    link=replied.link));
+
+  if (!recorded.recorded) {
+    return `Return: re-asked ${pr} at ${sha} in ${replied.link}, but the
+    record comment failed.`;
+  }
+
+  return `Return: re-asked ${pr} at ${sha} in ${replied.link}.`;
+}

@@ -1,0 +1,41 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The title of the pull request. */
+  title: string;
+  /** The owner and repo, such as owner/repo. */
+  repo: string;
+  /** The Jira key, such as ABC-123, or none. */
+  jira: string;
+  /** The Jira key of the parent story or epic, or none. */
+  story: string;
+  /** The login of the author. */
+  author: string;
+  /** The head commit sha. */
+  sha: string;
+}
+
+interface Team {
+  /** Is a review team found? */
+  found: boolean;
+  /** The review team of the pull request, such as platform, or none. */
+  team: string;
+}
+
+/**
+ * Ask the review team of a pull request for the first time on this head. Only
+ * the review team is asked here. Another required team is asked by a later run.
+ */
+export default async function askTeam({ pr, title, repo, jira, story,
+  author, sha }: Input) {
+  /** The review team: the Jira Team Name, else the team of the author. */
+  const team: Team = await request(@./ask_team/find_team(pr=pr, jira=jira,
+    author=author));
+
+  if (!team.found) {
+    return `Return: no team for ${pr}. Nothing posted.`;
+  }
+
+  return @./ask_team/find_and_post(pr=pr, title=title, repo=repo,
+    story=story, team=team.team, sha=sha);
+}

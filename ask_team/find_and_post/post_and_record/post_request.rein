@@ -1,0 +1,36 @@
+interface Input {
+  /** The title of the pull request, for one PR. */
+  title: string;
+  /** Why the approval of another team is required, or none. */
+  reason: string;
+  /** Each PR that waits for review as url sha, separated by semicolons. */
+  prs: string;
+  /** The story the PRs belong to, or none. */
+  label: string;
+  /** The chosen channels as name (id), separated by semicolons. */
+  channels: string;
+  /** The Slack user group mentions as <!subteam^ID>, or none. */
+  groups: string;
+}
+
+/**
+ * The text that posts the review request in each chosen channel. A story
+ * with more than one PR gets one message that lists its PRs. A PR with no
+ * story gets one message for itself.
+ */
+export default function postRequest({ title, reason, prs, label, channels,
+  groups }: Input) {
+  return `Post one message in each channel of ${channels}. When ${label} is
+  none, the message is "🤖 ${title} needs a review: <url of the PR>", changed
+  to match the usual phrasing of that channel: read its last 30 days of
+  review requests first. When ${label} is a story, the message is one line
+  of "🤖 ${label} needs reviews:" and then one line for each PR of ${prs}.
+  In each message, mention the user group of that channel from ${groups},
+  as written. The groups are in the same order as the channels. A channel
+  with no group gets no mention.
+  When ${reason} is not none, add one line that says: ${reason}. Post once
+  per channel, and
+  nothing else. Answer posted yes when every post succeeded, otherwise no.
+  Answer links: each post as <#channel> (<permalink>), separated by
+  semicolons.`;
+}

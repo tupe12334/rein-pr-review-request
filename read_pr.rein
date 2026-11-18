@@ -9,11 +9,19 @@ interface Input {
  */
 export default function readPr({ pr }: Input) {
   return `Read ${pr} with gh pr view ${pr} --json title,author,headRefOid,
-  headRefName,body,reviewRequests. Answer repo: the owner and repo name, as
-  owner/name. Answer jira: the Jira key in the title, the branch name or the
-  body, such as ABC-123, or none. Answer author: the login of the author.
-  Answer teams: the CODEOWNERS teams that own the changed files, read from
-  .github/CODEOWNERS or CODEOWNERS, as @org/team separated by spaces, or
-  none. Answer reviewers: the logins of the requested reviewers separated by
-  spaces, or none. Answer sha: the head commit sha. Change nothing.`;
+  baseRefName,body,files,reviewDecision. Answer repo: the owner and repo
+  name, as owner/name. Answer jira: the Jira key in the title, the branch
+  name or the body, such as ABC-123, or none. Answer story: the Jira key of
+  the parent story or epic of that ticket, or none. Answer author: the login
+  of the author. Answer base: the base branch name. Answer approved: yes only
+  when the reviewDecision field is APPROVED, otherwise no. Answer owners: for
+  each changed file, its path and the CODEOWNERS teams that own it, as
+  path: @org/team @org/team, the files separated by semicolons, or none.
+  Read CODEOWNERS only from the base branch, never from the head: run
+  gh api -H "Accept: application/vnd.github.raw"
+  "repos/<owner>/<repo>/contents/.github/CODEOWNERS?ref=<base>". When that
+  file is missing, read CODEOWNERS, then docs/CODEOWNERS, the same way at
+  ?ref=<base>. The first file found is used, and its last matching line wins.
+  Answer title: the title of the pull request, as written. Answer sha: the
+  head commit sha. Change nothing.`;
 }

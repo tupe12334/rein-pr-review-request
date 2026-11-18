@@ -10,59 +10,85 @@ interface Pr {
   title: string;
   /** The Jira key, such as ABC-123, or none. */
   jira: string;
+  /** The Jira key of the parent story or epic, or none. */
+  story: string;
   /** The login of the author. */
   author: string;
-  /** The CODEOWNERS teams of the changed files, or none. */
-  teams: string;
-  /** The logins of the requested reviewers, or none. */
-  reviewers: string;
+  /** The base branch of the pull request. */
+  base: string;
+  /** Is the reviewDecision of the pull request APPROVED? */
+  approved: boolean;
+  /** Each changed file with its CODEOWNERS teams, or none. */
+  owners: string;
   /** The head commit sha. */
   sha: string;
+}
+
+interface Place {
+  /** Is the pull request in a workplace: a work owner with a Slack
+   * workspace? */
+  workplace: boolean;
 }
 
 interface Guard {
   /** Does this head already have a review request comment? */
   already_asked: boolean;
-  /** Is there a human approval after the last push? */
-  approved: boolean;
-}
-
-interface Found {
-  /** Is at least one channel chosen? */
-  found: boolean;
-  /** The chosen channels as name (id), separated by semicolons, or none. */
-  channels: string;
+  /** Does any head already have a review request or a re-ask comment? */
+  asked_before: boolean;
+  /** Does this head already have a re-ask comment? */
+  reasked: boolean;
+  /** Was a human approval dismissed? */
+  dismissed: boolean;
+  /** The teams asked at this head, separated by spaces, or none. */
+  asked_teams: string;
+  /** The first review request comment, the thread root, or none. */
+  thread: string;
+  /** What changed since the asked head, in one line, or none. */
+  changed: string;
+  /** The last review request or re-ask comment, or none. */
+  last_post: string;
 }
 
 /**
  * Ask a human for a review of a pull request on Slack. The program posts
- * only when pr-handling calls it, and at most once per head.
+ * only when pr-handling calls it, and at most one team is asked per run.
  */
 export default async function main({ pr }: Input) {
   /** The facts of the pull request that the request needs. */
   const info: Pr = await request(@./read_pr(pr=pr));
 
-  /** Does this head already have a request, or a human approval after the
-   * last push? */
+  /** Is the pull request in a workplace? A personal repository is not. */
+  const place: Place = await request(@./check_workplace(pr=pr,
+    repo=info.repo));
+
+  if (!place.workplace) {
+    return `Return: not workplace for ${pr}. Nothing posted.`;
+  }
+
+  if (info.approved) {
+    return `Return: not needed for ${pr}: it is approved.`;
+  }
+
+  /** The requests and dismissals of this head and earlier heads. */
   const guard: Guard = await request(@./check_guards(pr=pr, sha=info.sha));
 
+  if (guard.reasked) {
+    return `Return: already re-asked for ${pr} at this head.`;
+  }
+
+  if (guard.asked_before && (guard.dismissed || !guard.already_asked)) {
+    return @./reask_team(pr=pr, title=info.title, repo=info.repo,
+      jira=info.jira, author=info.author, base=info.base, owners=info.owners,
+      sha=info.sha, changed=guard.changed, thread=guard.thread,
+      asked=guard.asked_teams);
+  }
+
   if (guard.already_asked) {
-    return `Return: already asked for ${pr} at this head.`;
+    return @./ask_other(pr=pr, title=info.title, repo=info.repo,
+      jira=info.jira, author=info.author, base=info.base, owners=info.owners,
+      sha=info.sha, asked=guard.asked_teams);
   }
 
-  if (guard.approved) {
-    return `Return: not needed for ${pr}: a human approved it.`;
-  }
-
-  /** The channels to ask, found at run time. */
-  const found: Found = await request(@./find_channels(pr=pr, repo=info.repo,
-    teams=info.teams));
-
-  if (!found.found) {
-    return `Return: no channel for ${pr}. Nothing posted.`;
-  }
-
-  return @./post_and_record(pr=pr, title=info.title,
-    reviewers=info.reviewers, teams=info.teams, sha=info.sha,
-    channels=found.channels);
+  return @./ask_team(pr=pr, title=info.title, repo=info.repo, jira=info.jira,
+    story=info.story, author=info.author, sha=info.sha);
 }

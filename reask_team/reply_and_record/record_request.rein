@@ -1,0 +1,20 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The head commit sha that was asked again. */
+  sha: string;
+  /** What changed since the asked head, in one line. */
+  changed: string;
+  /** The reply as <#channel> (<permalink>). */
+  link: string;
+}
+
+/**
+ * The text that records the re-ask on the pull request, so that the next
+ * run sees that this head was asked again.
+ */
+export default function recordRequest({ pr, sha, changed, link }: Input) {
+  return `Comment once on ${pr} with the text "🤖 Re-asked at ${sha} in
+  ${link}: ${changed}". Change nothing else. Answer recorded yes when the
+  comment was posted, otherwise no.`;
+}

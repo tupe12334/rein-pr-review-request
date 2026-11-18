@@ -1,0 +1,20 @@
+interface Input {
+  /** Each PR that waits for review as url sha, separated by semicolons. */
+  prs: string;
+  /** Each post as <#channel> (<permalink>), separated by semicolons. */
+  links: string;
+  /** The team that this request asks, such as platform. */
+  team: string;
+}
+
+/**
+ * The text that records each Slack post as a comment on each PR, keyed by the
+ * team and the head, so that the next run sees which teams were asked.
+ */
+export default function recordRequest({ prs, links, team }: Input) {
+  return `For each PR in ${prs}, comment once on that PR with the text
+  "🤖 Review requested in <#channel> (<permalink>) at <sha> for ${team}",
+  using the sha of that PR and the channel and the permalink of each post in
+  ${links}. Change nothing else. Answer recorded yes when every comment was
+  posted, otherwise no.`;
+}

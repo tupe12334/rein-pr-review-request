@@ -1,0 +1,17 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The team whose channel was not found, such as create-team. */
+  team: string;
+}
+
+/**
+ * The text that tells the owner on the pull request that a required team has
+ * no channel. Nothing is posted to Slack, and nothing is recorded as asked.
+ */
+export default function noChannel({ pr, team }: Input) {
+  return `Comment once on ${pr} with the text "🤖 No channel for ${team}: the
+  approval of ${team} is required to merge, and no Slack channel for it was
+  found. Nothing was posted." Change nothing else. Then return: no channel
+  for ${team}. Nothing asked.`;
+}

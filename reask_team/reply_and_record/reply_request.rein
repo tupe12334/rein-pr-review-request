@@ -1,0 +1,28 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The head commit sha that is asked again. */
+  sha: string;
+  /** What changed since the asked head, in one line. */
+  changed: string;
+  /** The first review request comment of each channel, or none. */
+  thread: string;
+}
+
+/**
+ * The text that replies in the Slack thread of each first request. It posts
+ * one reply per thread, and never a new top-level message. A thread that
+ * already has a reply for this head gets no second one.
+ */
+export default function replyRequest({ pr, sha, changed, thread }: Input) {
+  return `Reply once in the Slack thread of each first request in ${thread}
+  for ${pr}. Take the channel and the permalink of each one. The thread is
+  that post: its thread_ts is the p-number of the permalink, with a dot
+  before the last six digits. Post no new top-level message. First read the
+  replies of that thread. If a reply by you already starts with "🤖 New head
+  ${sha}", do not post again in that thread, and count it as replied. The
+  reply text is "🤖 New head ${sha}: ${changed}, ready for re-review".
+  Answer replied yes when every thread has a reply for this head, otherwise
+  no. Answer link: each <#channel> (<permalink of the reply>), separated by
+  semicolons, or none. Change nothing else on the pull request.`;
+}

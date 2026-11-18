@@ -1,0 +1,57 @@
+interface Input {
+  /** The title of the pull request, for one PR. */
+  title: string;
+  /** Why the approval of another team is required, or none. */
+  reason: string;
+  /** Each PR that waits for review as url sha, separated by semicolons. */
+  prs: string;
+  /** The story the PRs belong to, or none. */
+  label: string;
+  /** The chosen channels as name (id), separated by semicolons. */
+  channels: string;
+  /** The Slack user group mentions as <!subteam^ID>, or none. */
+  groups: string;
+  /** The team that this request asks, such as platform. */
+  team: string;
+}
+
+interface Posted {
+  /** Did every post succeed? */
+  posted: boolean;
+  /** Each post as <#channel> (<permalink>), separated by semicolons. */
+  links: string;
+}
+
+interface Recorded {
+  /** Was a comment recorded on each PR? */
+  recorded: boolean;
+}
+
+/**
+ * Post one message for the story, or for the one PR, in each chosen channel.
+ * Then record each post as a comment on each PR. A failed post records
+ * nothing.
+ */
+export default async function postAndRecord({ title, reason, prs, label,
+  channels, groups, team }: Input) {
+  /** The Slack posts, one message per channel, with the permalink of each. */
+  const posted: Posted = await request(
+    @./post_and_record/post_request(title=title, reason=reason, prs=prs,
+    label=label, channels=channels, groups=groups));
+
+  if (!posted.posted) {
+    return `Return: posted no: a Slack post failed. Nothing recorded.`;
+  }
+
+  /** The comments that record each post on each PR. */
+  const recorded: Recorded = await request(
+    @./post_and_record/record_request(prs=prs, links=posted.links,
+    team=team));
+
+  if (!recorded.recorded) {
+    return `Return: posted yes, but a record comment failed. Links:
+    ${posted.links}.`;
+  }
+
+  return `Return: posted yes. Links: ${posted.links}.`;
+}

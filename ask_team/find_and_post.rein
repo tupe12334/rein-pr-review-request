@@ -1,0 +1,55 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The title of the pull request. */
+  title: string;
+  /** The owner and repo of the pull request, such as owner/repo. */
+  repo: string;
+  /** The Jira key of the parent story or epic, or none. */
+  story: string;
+  /** The review team of the pull request, such as platform. */
+  team: string;
+  /** The head commit sha that is asked. */
+  sha: string;
+}
+
+interface Found {
+  /** Is a channel chosen? */
+  found: boolean;
+  /** The channel as name (id), or none. */
+  channel: string;
+  /** The Slack user group mention as <!subteam^ID>, or none. */
+  group: string;
+}
+
+interface Batch {
+  /** Each PR that waits for review as url sha, separated by semicolons. */
+  prs: string;
+  /** The story the PRs belong to, or none. */
+  label: string;
+}
+
+/**
+ * Find the channel of the review team, then post the request there. One
+ * request is posted per run: another team is asked by a later run. Nothing is
+ * posted when no channel is found.
+ */
+export default async function findAndPost({ pr, title, repo, story, team,
+  sha }: Input) {
+  /** The channel of the review team, found at run time. */
+  const own: Found = await request(
+    @./find_and_post/find_channel(team=team));
+
+  if (!own.found) {
+    return `Return: no channel for ${pr}. Nothing posted.`;
+  }
+
+  /** The PRs of the story that wait for review, or this PR alone. */
+  const batch: Batch = await request(
+    @./find_and_post/find_story(pr=pr, repo=repo, story=story, sha=sha,
+    team=team));
+
+  return @./find_and_post/post_and_record(title=title, reason=`none`,
+    prs=batch.prs, label=batch.label, channels=own.channel,
+    groups=own.group, team=team);
+}

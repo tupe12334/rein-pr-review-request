@@ -1,0 +1,35 @@
+interface Input {
+  /** The title of the pull request, for one PR. */
+  title: string;
+  /** Why the approval of another team is required, or none. */
+  reason: string;
+  /** Each PR that waits for review as url sha, separated by semicolons. */
+  prs: string;
+  /** The story the PRs belong to, or none. */
+  label: string;
+  /** The chosen channel as name (id), for this team. */
+  channels: string;
+  /** The Slack user group mention as <!subteam^ID>, or none. */
+  groups: string;
+  /** The team that this request asks, such as create-team. */
+  team: string;
+}
+
+/**
+ * The text that posts one team's review request in its channel, then records
+ * it on each PR, keyed by the team and the head. The record is written only
+ * when the post succeeded, so a failed post is retried on the next run.
+ */
+export default function postTeam({ title, reason, prs, label, channels,
+  groups, team }: Input) {
+  return `Post one message in the channel ${channels}. When ${label} is none,
+  the message is "🤖 ${title} needs a review: <url of the PR>". Otherwise it
+  is "🤖 ${label} needs reviews:" with one line for each PR of ${prs}. Mention
+  the user group ${groups} when it is not none. When ${reason} is not none,
+  add one line with it. Post nothing else. Answer posted yes when the post
+  succeeded, otherwise no. Only when it succeeded, comment once on each PR of
+  ${prs} with "🤖 Review requested in <#channel> (<permalink>) at <sha>
+  for ${team}", using the head sha of that PR. Answer recorded yes only when
+  posted is yes and every comment was posted, otherwise no. Answer links: the
+  post as <#channel> (<permalink>).`;
+}

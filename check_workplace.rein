@@ -1,0 +1,20 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The owner and repo of the pull request, such as owner/repo. */
+  repo: string;
+}
+
+/**
+ * The text that checks whether the pull request is in a workplace. The
+ * owner field of the repository must be exactly a work organization. It
+ * changes nothing and posts nothing.
+ */
+export default function checkWorkplace({ pr, repo }: Input) {
+  return `Run gh api repos/${repo} --jq .owner.login and read the login it
+  prints: the owner field of the repository, as written. Answer workplace yes
+  only when that login is exactly guiddeco, the one work organization. Compare
+  the whole login. Never match a part of the login, the repo name or the link
+  ${pr}, so a repo named guidde-tools under another owner is not a workplace.
+  Otherwise answer workplace no. Change nothing. Post nothing.`;
+}
