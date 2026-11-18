@@ -5,7 +5,7 @@ A [Rein](https://github.com/tupe12334/rein) program. It asks a human for a revie
 ## Install
 
 ```sh
-rein install -g github:tupe12334/rein-pr-review-request#v0.1.0
+rein install -g github:tupe12334/rein-pr-review-request#v0.2.0
 ```
 
 ## Use
