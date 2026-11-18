@@ -7,7 +7,7 @@ interface Input {
 
 /**
  * The text that checks the guards: an earlier request, a re-ask, a dismissed
- * approval and a human approval after the last push. It changes nothing.
+ * approval, and the teams already asked at this head. It changes nothing.
  */
 export default function checkGuards({ pr, sha }: Input) {
   return `Read the comments and reviews of ${pr}: gh api --paginate
@@ -20,20 +20,20 @@ export default function checkGuards({ pr, sha }: Input) {
   in" or "🤖 Re-asked at", at any head. Otherwise answer asked_before no.
   Answer reasked yes only if a comment by login starts with "🤖 Re-asked at"
   and names the head sha ${sha}. Otherwise answer reasked no. Answer
-  thread: for each channel that a comment by login starts with
-  "🤖 Review requested in" names, the full text of the first such comment for
-  that channel, separated by semicolons, or none. Answer last_post: the full
-  text of the
-  last comment by login that starts with "🤖 Review requested in" or "🤖
-  Re-asked at", or none. Answer dismissed yes only if a review by a human has
-  state DISMISSED and was submitted after the last comment that last_post
-  names. Otherwise answer dismissed no. Answer approved yes only if a review
-  by a human, not a bot and not login, has state APPROVED and was submitted
-  after the last commit of ${pr} (gh pr view ${pr} --json commits). Otherwise
-  answer approved no. Answer changed: one line of what changed since the head
-  that last_post names. When dismissed is yes, say that the earlier approval
-  was dismissed, and name the commits since that head. Otherwise compare that
-  head with ${sha} (gh api repos/<owner>/<repo>/compare/<that head>...${sha}
-  --jq '.commits[].commit.message') and name the change in one line. Answer
-  none when last_post is none. Change nothing.`;
+  asked_teams: each team that a comment by login starts with "🤖 Review
+  requested in" and names the head sha ${sha} for, as "for <team>", the
+  team names separated by spaces, or none. Answer thread: for each channel
+  that a comment by login starts with "🤖 Review requested in" names, the
+  full text of the first such comment for that channel, separated by
+  semicolons, or none. Answer last_post: the full text of the last comment by
+  login that starts with "🤖 Review requested in" or "🤖 Re-asked at", or
+  none. Answer dismissed yes only if a review by a human has state DISMISSED
+  and was submitted after the last comment that last_post names. Otherwise
+  answer dismissed no. Answer changed: one line of what changed since the
+  head that last_post names. When dismissed is yes, say that the earlier
+  approval was dismissed, and name the commits since that head. Otherwise
+  compare that head with ${sha} (gh api
+  repos/<owner>/<repo>/compare/<that head>...${sha} --jq
+  '.commits[].commit.message') and name the change in one line. Answer none
+  when last_post is none. Change nothing.`;
 }

@@ -19,7 +19,7 @@ if ! (cd "$tmp" && rein check . > /dev/null 2>&1); then
   exit 1
 fi
 if (cd "$tmp" && WALKS_ROOT="$tmp" sh scripts/walks.sh) |
-  grep -q '^FAIL: a re-ask at this head runs once per head'; then
+  grep -q '^FAIL: a head that was re-asked returns already re-asked'; then
   echo "sabotage fails as expected: the walk catches the repeated re-ask"
   exit 0
 fi

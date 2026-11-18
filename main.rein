@@ -16,6 +16,8 @@ interface Pr {
   author: string;
   /** The base branch of the pull request. */
   base: string;
+  /** Is the reviewDecision of the pull request APPROVED? */
+  approved: boolean;
   /** Each changed file with its CODEOWNERS teams, or none. */
   owners: string;
   /** The head commit sha. */
@@ -37,8 +39,8 @@ interface Guard {
   reasked: boolean;
   /** Was a human approval dismissed? */
   dismissed: boolean;
-  /** Is there a human approval after the last push? */
-  approved: boolean;
+  /** The teams asked at this head, separated by spaces, or none. */
+  asked_teams: string;
   /** The first review request comment, the thread root, or none. */
   thread: string;
   /** What changed since the asked head, in one line, or none. */
@@ -49,7 +51,7 @@ interface Guard {
 
 /**
  * Ask a human for a review of a pull request on Slack. The program posts
- * only when pr-handling calls it, and at most once per head.
+ * only when pr-handling calls it, and at most one team is asked per run.
  */
 export default async function main({ pr }: Input) {
   /** The facts of the pull request that the request needs. */
@@ -63,12 +65,12 @@ export default async function main({ pr }: Input) {
     return `Return: not workplace for ${pr}. Nothing posted.`;
   }
 
-  /** The requests and approvals of this head and earlier heads. */
-  const guard: Guard = await request(@./check_guards(pr=pr, sha=info.sha));
-
-  if (guard.approved) {
-    return `Return: not needed for ${pr}: a human approved it.`;
+  if (info.approved) {
+    return `Return: not needed for ${pr}: it is approved.`;
   }
+
+  /** The requests and dismissals of this head and earlier heads. */
+  const guard: Guard = await request(@./check_guards(pr=pr, sha=info.sha));
 
   if (guard.reasked) {
     return `Return: already re-asked for ${pr} at this head.`;
@@ -77,14 +79,16 @@ export default async function main({ pr }: Input) {
   if (guard.asked_before && (guard.dismissed || !guard.already_asked)) {
     return @./reask_team(pr=pr, title=info.title, repo=info.repo,
       jira=info.jira, author=info.author, base=info.base, owners=info.owners,
-      sha=info.sha, changed=guard.changed, thread=guard.thread);
+      sha=info.sha, changed=guard.changed, thread=guard.thread,
+      asked=guard.asked_teams);
   }
 
   if (guard.already_asked) {
-    return `Return: already asked for ${pr} at this head.`;
+    return @./ask_other(pr=pr, title=info.title, repo=info.repo,
+      jira=info.jira, author=info.author, base=info.base, owners=info.owners,
+      sha=info.sha, asked=guard.asked_teams);
   }
 
   return @./ask_team(pr=pr, title=info.title, repo=info.repo, jira=info.jira,
-    story=info.story, author=info.author, base=info.base, owners=info.owners,
-    sha=info.sha);
+    story=info.story, author=info.author, sha=info.sha);
 }

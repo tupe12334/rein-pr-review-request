@@ -11,12 +11,6 @@ interface Input {
   team: string;
   /** The head commit sha that is asked. */
   sha: string;
-  /** Is the approval of another team required to merge? */
-  required: boolean;
-  /** The other team's name without the org, such as create-team, or none. */
-  other: string;
-  /** Why that approval is required, in one line, or none. */
-  reason: string;
 }
 
 interface Found {
@@ -36,12 +30,12 @@ interface Batch {
 }
 
 /**
- * Find the channels for a new review request, then post it. The review team
- * channel is always asked. The other team channel is asked only when its
- * approval is required. Nothing is posted when a channel is not found.
+ * Find the channel of the review team, then post the request there. One
+ * request is posted per run: another team is asked by a later run. Nothing is
+ * posted when no channel is found.
  */
 export default async function findAndPost({ pr, title, repo, story, team,
-  sha, required, other, reason }: Input) {
+  sha }: Input) {
   /** The channel of the review team, found at run time. */
   const own: Found = await request(
     @./find_and_post/find_channel(team=team));
@@ -55,23 +49,7 @@ export default async function findAndPost({ pr, title, repo, story, team,
     @./find_and_post/find_story(pr=pr, repo=repo, story=story, sha=sha,
     team=team));
 
-  if (!required) {
-    return @./find_and_post/post_and_record(title=title, reason=reason,
-      prs=batch.prs, label=batch.label, channels=own.channel,
-      groups=own.group);
-  }
-
-  /** The channel of the other team, asked because its approval is required. */
-  const extra: Found = await request(
-    @./find_and_post/find_channel(team=other));
-
-  if (!extra.found) {
-    return `Return: no channel for ${other}, needed for ${pr}. Nothing
-    posted.`;
-  }
-
-  return @./find_and_post/post_and_record(title=title, reason=reason,
-    prs=batch.prs, label=batch.label,
-    channels=`${own.channel}; ${extra.channel}`,
-    groups=`${own.group} ${extra.group}`);
+  return @./find_and_post/post_and_record(title=title, reason=`none`,
+    prs=batch.prs, label=batch.label, channels=own.channel,
+    groups=own.group, team=team);
 }

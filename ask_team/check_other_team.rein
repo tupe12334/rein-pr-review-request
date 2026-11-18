@@ -9,15 +9,18 @@ interface Input {
   owners: string;
   /** The review team of the pull request, such as platform. */
   team: string;
+  /** The teams already asked at this head, separated by spaces, or none. */
+  asked: string;
 }
 
 /**
  * The text that decides whether the approval of another team is required to
- * merge the pull request. Only a code-owner rule that the review team cannot
- * satisfy makes it required. It changes nothing and posts nothing.
+ * merge the pull request, and which one is still to be asked. Only a code-owner
+ * rule that the review team cannot satisfy makes it required. It changes
+ * nothing and posts nothing.
  */
-export default function checkOtherTeam({ pr, repo, base, owners, team }:
-  Input) {
+export default function checkOtherTeam({ pr, repo, base, owners, team,
+  asked }: Input) {
   return `Decide whether a team other than ${team} must approve ${pr} to
   merge. Read the rules of ${base} of ${repo}: gh api
   repos/<owner>/<repo>/rules/branches/${base} and gh api
@@ -26,9 +29,10 @@ export default function checkOtherTeam({ pr, repo, base, owners, team }:
   A file counts only when a CODEOWNERS team other than ${team} owns it and
   ${team} does not own it, so the approval of ${team} cannot satisfy the
   rule for that file. Compare team names in lower case, without the org.
-  Answer required yes only when such a file exists and the rule holds, and
-  no otherwise. Answer other: the other team's name without the org, such as
-  create-team, or none. Answer reason: one line that says code-owner review
-  by that team is required for the files, or none. Change nothing.
+  Answer other: the first such team that is not in ${asked}, as its name
+  without the org, such as create-team. Answer required yes only when such a
+  team exists and the rule holds, and no otherwise. Answer other: none when
+  required is no. Answer reason: one line that says code-owner review by that
+  team is required for the files, or none. Change nothing.
   Post nothing.`;
 }

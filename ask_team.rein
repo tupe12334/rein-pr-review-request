@@ -11,10 +11,6 @@ interface Input {
   story: string;
   /** The login of the author. */
   author: string;
-  /** The base branch of the pull request. */
-  base: string;
-  /** Each changed file with its CODEOWNERS teams, or none. */
-  owners: string;
   /** The head commit sha. */
   sha: string;
 }
@@ -26,21 +22,12 @@ interface Team {
   team: string;
 }
 
-interface Other {
-  /** Is the approval of another team required to merge? */
-  required: boolean;
-  /** The other team as @org/team, or none. */
-  other: string;
-  /** Why that approval is required, in one line, or none. */
-  reason: string;
-}
-
 /**
- * Find the review team of a pull request, then the other team whose approval
- * may be required. Then ask the review team and the other team, if needed.
+ * Ask the review team of a pull request for the first time on this head. Only
+ * the review team is asked here. Another required team is asked by a later run.
  */
 export default async function askTeam({ pr, title, repo, jira, story,
-  author, base, owners, sha }: Input) {
+  author, sha }: Input) {
   /** The review team: the Jira Team Name, else the team of the author. */
   const team: Team = await request(@./ask_team/find_team(pr=pr, jira=jira,
     author=author));
@@ -49,11 +36,6 @@ export default async function askTeam({ pr, title, repo, jira, story,
     return `Return: no team for ${pr}. Nothing posted.`;
   }
 
-  /** Is the approval of another team required to merge? */
-  const other: Other = await request(@./ask_team/check_other_team(pr=pr,
-    repo=repo, base=base, owners=owners, team=team.team));
-
   return @./ask_team/find_and_post(pr=pr, title=title, repo=repo,
-    story=story, team=team.team, sha=sha, required=other.required,
-    other=other.other, reason=other.reason);
+    story=story, team=team.team, sha=sha);
 }

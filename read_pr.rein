@@ -9,14 +9,15 @@ interface Input {
  */
 export default function readPr({ pr }: Input) {
   return `Read ${pr} with gh pr view ${pr} --json title,author,headRefOid,
-  baseRefName,body,files,reviewRequests. Answer repo: the owner and repo
+  baseRefName,body,files,reviewDecision. Answer repo: the owner and repo
   name, as owner/name. Answer jira: the Jira key in the title, the branch
   name or the body, such as ABC-123, or none. Answer story: the Jira key of
   the parent story or epic of that ticket, or none. Answer author: the login
-  of the author. Answer base: the base branch name. Answer owners: for each
-  changed file, its path and the CODEOWNERS teams that own it, read from
+  of the author. Answer base: the base branch name. Answer approved: yes only
+  when the reviewDecision field is APPROVED, otherwise no. Answer owners: for
+  each changed file, its path and the CODEOWNERS teams that own it, read from
   .github/CODEOWNERS or CODEOWNERS (the last matching line wins), as
   path: @org/team @org/team, the files separated by semicolons, or none.
-  Answer title: the title of the pull request, as written.
-  Answer sha: the head commit sha. Change nothing.`;
+  Answer title: the title of the pull request, as written. Answer sha: the
+  head commit sha. Change nothing.`;
 }

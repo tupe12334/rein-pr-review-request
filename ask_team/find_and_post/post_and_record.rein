@@ -11,6 +11,8 @@ interface Input {
   channels: string;
   /** The Slack user group mentions as <!subteam^ID>, or none. */
   groups: string;
+  /** The team that this request asks, such as platform. */
+  team: string;
 }
 
 interface Posted {
@@ -31,7 +33,7 @@ interface Recorded {
  * nothing.
  */
 export default async function postAndRecord({ title, reason, prs, label,
-  channels, groups }: Input) {
+  channels, groups, team }: Input) {
   /** The Slack posts, one message per channel, with the permalink of each. */
   const posted: Posted = await request(
     @./post_and_record/post_request(title=title, reason=reason, prs=prs,
@@ -43,7 +45,8 @@ export default async function postAndRecord({ title, reason, prs, label,
 
   /** The comments that record each post on each PR. */
   const recorded: Recorded = await request(
-    @./post_and_record/record_request(prs=prs, links=posted.links));
+    @./post_and_record/record_request(prs=prs, links=posted.links,
+    team=team));
 
   if (!recorded.recorded) {
     return `Return: posted yes, but a record comment failed. Links:
