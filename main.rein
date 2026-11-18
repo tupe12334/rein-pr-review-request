@@ -37,6 +37,8 @@ interface Guard {
   dismissed: boolean;
   /** Is there a human approval after the last push? */
   approved: boolean;
+  /** The first review request comment, the thread root, or none. */
+  thread: string;
   /** What changed since the asked head, in one line, or none. */
   changed: string;
   /** The last review request or re-ask comment, or none. */
@@ -72,7 +74,7 @@ export default async function main({ pr }: Input) {
 
   if (guard.asked_before && (guard.dismissed || !guard.already_asked)) {
     return @./reply_and_record(pr=pr, sha=info.sha, changed=guard.changed,
-      last_post=guard.last_post);
+      thread=guard.thread);
   }
 
   if (guard.already_asked) {

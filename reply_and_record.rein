@@ -5,8 +5,8 @@ interface Input {
   sha: string;
   /** What changed since the asked head, in one line. */
   changed: string;
-  /** The last review request or re-ask comment of your account. */
-  last_post: string;
+  /** The first review request comment, the thread root. */
+  thread: string;
 }
 
 interface Replied {
@@ -22,16 +22,16 @@ interface Recorded {
 }
 
 /**
- * Reply in the Slack thread of the earlier post, because the head changed
+ * Reply in the Slack thread of the first request, because the head changed
  * or an approval was dismissed. Then record the re-ask on the PR. A failed
  * reply records nothing.
  */
-export default async function replyAndRecord({ pr, sha, changed,
-  last_post }: Input) {
+export default async function replyAndRecord({ pr, sha, changed, thread }:
+  Input) {
   /** The reply in the thread. */
   const replied: Replied = await request(
     @./reply_and_record/reply_request(pr=pr, sha=sha, changed=changed,
-    last_post=last_post));
+    thread=thread));
 
   if (!replied.replied) {
     return `Return: re-ask failed for ${pr}: the thread reply was not

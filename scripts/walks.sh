@@ -11,12 +11,12 @@ SHA=0123456789abcdef0123456789abcdef01234567
 INFO='main.info={"repo":"owner/repo","title":"Fix the thing","jira":"none","author":"someone","teams":"@owner/core","reviewers":"none","sha":"0123456789abcdef0123456789abcdef01234567"}'
 PLACE_YES='main.place={"workplace":true}'
 PLACE_NO='main.place={"workplace":false}'
-NOT_ASKED='main.guard={"already_asked":false,"asked_before":false,"reasked":false,"dismissed":false,"approved":false,"changed":"none","last_post":"none"}'
-ASKED="main.guard={\"already_asked\":true,\"asked_before\":true,\"reasked\":false,\"dismissed\":false,\"approved\":false,\"changed\":\"none\",\"last_post\":\"🤖 Review requested in <#C123> (https://slack.example/p1) at $SHA\"}"
-CHANGED='main.guard={"already_asked":false,"asked_before":true,"reasked":false,"dismissed":false,"approved":false,"changed":"2 commits: fix the retry","last_post":"🤖 Review requested in <#C123> (https://slack.example/p1) at 1111"}'
-DISMISSED='main.guard={"already_asked":true,"asked_before":true,"reasked":false,"dismissed":true,"approved":false,"changed":"the earlier approval was dismissed","last_post":"🤖 Review requested in <#C123> (https://slack.example/p1) at 0123"}'
-REASKED="main.guard={\"already_asked\":true,\"asked_before\":true,\"reasked\":true,\"dismissed\":true,\"approved\":false,\"changed\":\"the earlier approval was dismissed\",\"last_post\":\"🤖 Re-asked at $SHA in <#C123> (https://slack.example/p2): the earlier approval was dismissed\"}"
-APPROVED='main.guard={"already_asked":false,"asked_before":true,"reasked":false,"dismissed":false,"approved":true,"changed":"none","last_post":"none"}'
+NOT_ASKED='main.guard={"already_asked":false,"asked_before":false,"reasked":false,"dismissed":false,"approved":false,"changed":"none","thread":"none","last_post":"none"}'
+ASKED="main.guard={\"already_asked\":true,\"asked_before\":true,\"reasked\":false,\"dismissed\":false,\"approved\":false,\"changed\":\"none\",\"thread\":\"none\",\"last_post\":\"🤖 Review requested in <#C123> (https://slack.example/p1) at $SHA\"}"
+CHANGED='main.guard={"already_asked":false,"asked_before":true,"reasked":false,"dismissed":false,"approved":false,"changed":"2 commits: fix the retry","thread":"🤖 Review requested in <#C123> (https://slack.example/p1) at 0123","last_post":"🤖 Review requested in <#C123> (https://slack.example/p1) at 1111"}'
+DISMISSED='main.guard={"already_asked":true,"asked_before":true,"reasked":false,"dismissed":true,"approved":false,"changed":"the earlier approval was dismissed","thread":"🤖 Review requested in <#C123> (https://slack.example/p1) at 0123","last_post":"🤖 Review requested in <#C123> (https://slack.example/p1) at 0123"}'
+REASKED="main.guard={\"already_asked\":true,\"asked_before\":true,\"reasked\":true,\"dismissed\":true,\"approved\":false,\"changed\":\"the earlier approval was dismissed\",\"thread\":\"none\",\"last_post\":\"🤖 Re-asked at $SHA in <#C123> (https://slack.example/p2): the earlier approval was dismissed\"}"
+APPROVED='main.guard={"already_asked":false,"asked_before":true,"reasked":false,"dismissed":false,"approved":true,"changed":"none","thread":"none","last_post":"none"}'
 FOUND_YES='find_and_post.found={"found":true,"channels":"review-room (C123)","groups":"@owner-core"}'
 FOUND_NO='find_and_post.found={"found":false,"channels":"none","groups":"none"}'
 POSTED_YES='find_and_post/post_and_record.posted={"posted":true,"links":"<#C123> (https://slack.example/p1)"}'
@@ -99,7 +99,7 @@ never "a human approval never re-asks in the thread" \
 expect "the guard checks the request for the head sha" \
   'names the head sha 0123' --answer "$INFO" --answer "$PLACE_YES"
 expect "the guard counts only human approvals after the last push" \
-  'submitted after the last commit' --answer "$INFO" --answer "$PLACE_YES"
+  'was submitted' --answer "$INFO" --answer "$PLACE_YES"
 expect "a head that changed since the request re-asks in the thread" \
   'Reply once in the Slack thread' --answer "$INFO" --answer "$PLACE_YES" \
   --answer "$CHANGED"
@@ -116,6 +116,12 @@ expect "a re-ask at this head runs once per head" 'already re-asked' \
   --answer "$INFO" --answer "$PLACE_YES" --answer "$REASKED"
 never "a re-ask at this head never replies again" "$REPLY_KEY" \
   --answer "$INFO" --answer "$PLACE_YES" --answer "$REASKED"
+expect "a dismissal before the last request does not re-ask" \
+  'was submitted after the last comment that last_post' --answer "$INFO" \
+  --answer "$PLACE_YES"
+expect "a re-ask reply goes to the first request's thread" \
+  'the permalink from' --answer "$INFO" --answer "$PLACE_YES" \
+  --answer "$CHANGED"
 expect "a successful re-ask records it on the PR" 'Re-asked at 0123' \
   --answer "$INFO" --answer "$PLACE_YES" --answer "$CHANGED" \
   --answer "$REPLIED_YES"
