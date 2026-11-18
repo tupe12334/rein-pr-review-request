@@ -20,18 +20,27 @@ interface Pr {
   sha: string;
 }
 
+interface Place {
+  /** Is the pull request in a workplace: a work owner with a Slack
+   * workspace? */
+  workplace: boolean;
+}
+
 interface Guard {
   /** Does this head already have a review request comment? */
   already_asked: boolean;
+  /** Does any head already have a review request or a re-ask comment? */
+  asked_before: boolean;
+  /** Does this head already have a re-ask comment? */
+  reasked: boolean;
+  /** Was a human approval dismissed? */
+  dismissed: boolean;
   /** Is there a human approval after the last push? */
   approved: boolean;
-}
-
-interface Found {
-  /** Is at least one channel chosen? */
-  found: boolean;
-  /** The chosen channels as name (id), separated by semicolons, or none. */
-  channels: string;
+  /** What changed since the asked head, in one line, or none. */
+  changed: string;
+  /** The last review request or re-ask comment, or none. */
+  last_post: string;
 }
 
 /**
@@ -42,27 +51,34 @@ export default async function main({ pr }: Input) {
   /** The facts of the pull request that the request needs. */
   const info: Pr = await request(@./read_pr(pr=pr));
 
-  /** Does this head already have a request, or a human approval after the
-   * last push? */
-  const guard: Guard = await request(@./check_guards(pr=pr, sha=info.sha));
+  /** Is the pull request in a workplace? A personal repository is not. */
+  const place: Place = await request(@./check_workplace(pr=pr,
+    repo=info.repo));
 
-  if (guard.already_asked) {
-    return `Return: already asked for ${pr} at this head.`;
+  if (!place.workplace) {
+    return `Return: not workplace for ${pr}. Nothing posted.`;
   }
+
+  /** The requests and approvals of this head and earlier heads. */
+  const guard: Guard = await request(@./check_guards(pr=pr, sha=info.sha));
 
   if (guard.approved) {
     return `Return: not needed for ${pr}: a human approved it.`;
   }
 
-  /** The channels to ask, found at run time. */
-  const found: Found = await request(@./find_channels(pr=pr, repo=info.repo,
-    teams=info.teams));
-
-  if (!found.found) {
-    return `Return: no channel for ${pr}. Nothing posted.`;
+  if (guard.reasked) {
+    return `Return: already re-asked for ${pr} at this head.`;
   }
 
-  return @./post_and_record(pr=pr, title=info.title,
-    reviewers=info.reviewers, teams=info.teams, sha=info.sha,
-    channels=found.channels);
+  if (guard.asked_before && (guard.dismissed || !guard.already_asked)) {
+    return @./reply_and_record(pr=pr, sha=info.sha, changed=guard.changed,
+      last_post=guard.last_post);
+  }
+
+  if (guard.already_asked) {
+    return `Return: already asked for ${pr} at this head.`;
+  }
+
+  return @./find_and_post(pr=pr, title=info.title, repo=info.repo,
+    teams=info.teams, reviewers=info.reviewers, sha=info.sha);
 }

@@ -9,20 +9,23 @@ interface Input {
   teams: string;
   /** The chosen channels as name (id), separated by semicolons. */
   channels: string;
+  /** The Slack user groups as @handle, separated by spaces, or none. */
+  groups: string;
 }
 
 /**
  * The text that posts one line for the pull request in each chosen channel,
  * in the channel's usual phrasing.
  */
-export default function postRequest({ pr, title, reviewers, teams, channels }:
-  Input) {
+export default function postRequest({ pr, title, reviewers, teams, channels,
+  groups }: Input) {
   return `Post one line for ${pr} in each channel of ${channels}. Use
   "🤖 ${title} needs a review: ${pr}", changed to match the usual phrasing of
   that channel: read its last 30 days of review requests first.
   Mention the reviewers ${reviewers} or the team ${teams} only when that
-  channel's past review requests do. Post once per channel, and nothing else.
-  Answer posted
-  yes when every post succeeded, otherwise no. Answer links: each post as
-  <#channel> (<permalink>), separated by semicolons.`;
+  channel's past review requests do. Mention the user group ${groups} only
+  when that channel's past review requests mention a user group. Post once
+  per channel, and nothing else. Answer posted yes when every post succeeded,
+  otherwise no. Answer links: each post as <#channel> (<permalink>),
+  separated by semicolons.`;
 }

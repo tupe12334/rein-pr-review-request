@@ -7,7 +7,7 @@ root=$(pwd)
 tmp=$(mktemp -d) || exit 1
 trap 'rm -rf "$tmp"' EXIT
 cp -R "$root/." "$tmp/" || exit 1
-target=main.rein
+target=find_and_post.rein
 sed 's/if (!found.found) {/if (found.found) {/' \
   "$root/$target" > "$tmp/$target" || exit 1
 if cmp -s "$root/$target" "$tmp/$target"; then

@@ -11,6 +11,8 @@ interface Input {
   sha: string;
   /** The chosen channels as name (id), separated by semicolons. */
   channels: string;
+  /** The Slack user groups as @handle, separated by spaces, or none. */
+  groups: string;
 }
 
 interface Posted {
@@ -30,11 +32,11 @@ interface Recorded {
  * a comment on the PR. A failed post records nothing.
  */
 export default async function postAndRecord({ pr, title, reviewers, teams,
-  sha, channels }: Input) {
+  sha, channels, groups }: Input) {
   /** The Slack posts, one line per channel, with the permalink of each. */
   const posted: Posted = await request(
     @./post_and_record/post_request(pr=pr, title=title, reviewers=reviewers,
-    teams=teams, channels=channels));
+    teams=teams, channels=channels, groups=groups));
 
   if (!posted.posted) {
     return `Return: posted no for ${pr}: a Slack post failed.`;

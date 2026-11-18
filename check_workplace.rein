@@ -1,0 +1,19 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The owner and repo of the pull request, such as owner/repo. */
+  repo: string;
+}
+
+/**
+ * The text that checks whether the pull request is in a workplace. The
+ * owner of the repository must name a Slack channel in a workspace that the
+ * account can read. It changes nothing and posts nothing.
+ */
+export default function checkWorkplace({ pr, repo }: Input) {
+  return `Read the owner of ${repo}: the text before the slash. Search the
+  Slack channels with slack_search_channels for that owner name. Answer
+  workplace yes only if a channel in a Slack workspace that the account can
+  read has the owner name in its name, topic or purpose, for ${pr}.
+  Otherwise answer workplace no. Change nothing. Post nothing.`;
+}

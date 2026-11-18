@@ -1,0 +1,24 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The head commit sha that is asked again. */
+  sha: string;
+  /** What changed since the asked head, in one line. */
+  changed: string;
+  /** The last review request or re-ask comment of your account. */
+  last_post: string;
+}
+
+/**
+ * The text that replies in the Slack thread of the earlier post. It posts
+ * one reply, never a new top-level message.
+ */
+export default function replyRequest({ pr, sha, changed, last_post }: Input) {
+  return `Reply once in the Slack thread of the earlier post for ${pr}. Take
+  the channel and the permalink from ${last_post}. The thread is that post:
+  its thread_ts is the p-number of the permalink, with a dot before the last
+  six digits. Post no new top-level message. The reply text is "🤖 New head
+  ${sha}: ${changed}, ready for re-review". Answer replied yes when the
+  reply was posted, otherwise no. Answer link: <#channel> (<permalink of the
+  reply>), or none. Change nothing else on the pull request.`;
+}
