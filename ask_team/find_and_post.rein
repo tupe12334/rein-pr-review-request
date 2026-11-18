@@ -1,0 +1,76 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The title of the pull request. */
+  title: string;
+  /** The owner and repo of the pull request, such as owner/repo. */
+  repo: string;
+  /** The Jira key of the parent story or epic, or none. */
+  story: string;
+  /** The review team of the pull request, such as platform. */
+  team: string;
+  /** The head commit sha that is asked. */
+  sha: string;
+  /** Is the approval of another team required to merge? */
+  required: boolean;
+  /** The other team as @org/team, or none. */
+  other: string;
+  /** Why that approval is required, in one line, or none. */
+  reason: string;
+}
+
+interface Found {
+  /** Is a channel chosen? */
+  found: boolean;
+  /** The channel as name (id), or none. */
+  channel: string;
+  /** The Slack user group mention as <!subteam^ID>, or none. */
+  group: string;
+}
+
+interface Batch {
+  /** Each PR that waits for review as url sha, separated by semicolons. */
+  prs: string;
+  /** The story the PRs belong to, or none. */
+  label: string;
+}
+
+/**
+ * Find the channels for a new review request, then post it. The review team
+ * channel is always asked. The other team channel is asked only when its
+ * approval is required. Nothing is posted when a channel is not found.
+ */
+export default async function findAndPost({ pr, title, repo, story, team,
+  sha, required, other, reason }: Input) {
+  /** The channel of the review team, found at run time. */
+  const own: Found = await request(
+    @./find_and_post/find_channel(team=team));
+
+  if (!own.found) {
+    return `Return: no channel for ${pr}. Nothing posted.`;
+  }
+
+  /** The PRs of the story that wait for review, or this PR alone. */
+  const batch: Batch = await request(
+    @./find_and_post/find_story(pr=pr, repo=repo, story=story, sha=sha));
+
+  if (!required) {
+    return @./find_and_post/post_and_record(title=title, reason=reason,
+      prs=batch.prs, label=batch.label, channels=own.channel,
+      groups=own.group);
+  }
+
+  /** The channel of the other team, asked because its approval is required. */
+  const extra: Found = await request(
+    @./find_and_post/find_channel(team=other));
+
+  if (!extra.found) {
+    return `Return: no channel for ${other}, needed for ${pr}. Nothing
+    posted.`;
+  }
+
+  return @./find_and_post/post_and_record(title=title, reason=reason,
+    prs=batch.prs, label=batch.label,
+    channels=`${own.channel}; ${extra.channel}`,
+    groups=`${own.group} ${extra.group}`);
+}

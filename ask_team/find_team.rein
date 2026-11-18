@@ -1,0 +1,25 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The Jira key of the ticket, or none. */
+  jira: string;
+  /** The login of the author. */
+  author: string;
+}
+
+/**
+ * The text that finds the team that owns the review of a pull request: the
+ * Jira Team Name of its ticket, or else the team of its author. It posts
+ * nothing.
+ */
+export default function findTeam({ pr, jira, author }: Input) {
+  return `Find the review team of ${pr}. When ${jira} is not none, read that
+  Jira ticket and its Team Name field. When the field is set, answer team
+  with its name, such as Platform. Otherwise, find the team of ${author}:
+  search the messages that ${author} posted in the Slack channels named
+  *-prs (slack_search_public_and_private). Take the channel that ${author}
+  posts in most. Answer team with its name, such as platform for
+  team-platform-prs or platform-prs. Answer found yes when a team is found,
+  otherwise no, and answer team none when it is not. Never invent a team. Change
+  nothing. Post nothing.`;
+}

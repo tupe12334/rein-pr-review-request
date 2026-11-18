@@ -10,12 +10,14 @@ interface Pr {
   title: string;
   /** The Jira key, such as ABC-123, or none. */
   jira: string;
+  /** The Jira key of the parent story or epic, or none. */
+  story: string;
   /** The login of the author. */
   author: string;
-  /** The CODEOWNERS teams of the changed files, or none. */
-  teams: string;
-  /** The logins of the requested reviewers, or none. */
-  reviewers: string;
+  /** The base branch of the pull request. */
+  base: string;
+  /** Each changed file with its CODEOWNERS teams, or none. */
+  owners: string;
   /** The head commit sha. */
   sha: string;
 }
@@ -81,6 +83,7 @@ export default async function main({ pr }: Input) {
     return `Return: already asked for ${pr} at this head.`;
   }
 
-  return @./find_and_post(pr=pr, title=info.title, repo=info.repo,
-    teams=info.teams, reviewers=info.reviewers, sha=info.sha);
+  return @./ask_team(pr=pr, title=info.title, repo=info.repo, jira=info.jira,
+    story=info.story, author=info.author, base=info.base, owners=info.owners,
+    sha=info.sha);
 }

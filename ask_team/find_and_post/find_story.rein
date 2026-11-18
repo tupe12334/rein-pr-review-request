@@ -1,0 +1,28 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The owner and repo of the pull request, such as owner/repo. */
+  repo: string;
+  /** The Jira key of the parent story or epic, or none. */
+  story: string;
+  /** The head commit sha of the pull request. */
+  sha: string;
+}
+
+/**
+ * The text that finds the pull requests that one message should list: each
+ * open PR of the story that waits for a review and has no request for its
+ * head yet. Without a story, only the pull request itself. It changes
+ * nothing and posts nothing.
+ */
+export default function findStory({ pr, repo, story, sha }: Input) {
+  return `List the pull requests to ask in one message. When ${story} is
+  none, answer prs with ${pr} ${sha} and label none. Otherwise search the
+  open, non-draft pull requests of ${repo} whose title, branch or body names
+  ${story} (gh pr list --repo ${repo} --state open --json). Keep each one
+  that has no approval and no "🤖 Review requested in" comment at its head.
+  Always keep ${pr}. Answer prs: each kept PR as url sha, with its head
+  commit sha, separated by semicolons. Answer label: the title of ${story}
+  as written in Jira, or ${story} when it cannot be read. Change nothing.
+  Post nothing.`;
+}

@@ -1,14 +1,15 @@
 #!/bin/sh
-# Invert the no-channel guard in a copy of main.rein, so a PR with no channel
-# is posted anyway, then check that a walk fails. A walk that still passes
-# does not guard the rule that posts nothing when no channel is found.
+# Invert the no-channel guard in a copy of ask_team/find_and_post.rein, so a
+# PR with no owner channel is posted anyway, then check that a walk fails. A
+# walk that still passes does not guard the rule that posts nothing when no
+# channel is found.
 cd "$(dirname "$0")/.." || exit 1
 root=$(pwd)
 tmp=$(mktemp -d) || exit 1
 trap 'rm -rf "$tmp"' EXIT
 cp -R "$root/." "$tmp/" || exit 1
-target=find_and_post.rein
-sed 's/if (!found.found) {/if (found.found) {/' \
+target=ask_team/find_and_post.rein
+sed 's/if (!own.found) {/if (own.found) {/' \
   "$root/$target" > "$tmp/$target" || exit 1
 if cmp -s "$root/$target" "$tmp/$target"; then
   echo "sabotage did not apply: the no-channel guard is not in $target"
@@ -19,7 +20,7 @@ if ! (cd "$tmp" && rein check . > /dev/null 2>&1); then
   exit 1
 fi
 if (cd "$tmp" && WALKS_ROOT="$tmp" sh scripts/walks.sh) |
-  grep -q '^FAIL: no channel found posts nothing'; then
+  grep -q '^FAIL: no owner channel posts nothing'; then
   echo "sabotage fails as expected: the walk catches the posted no-channel PR"
   exit 0
 fi

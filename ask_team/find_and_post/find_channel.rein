@@ -1,0 +1,22 @@
+interface Input {
+  /** The review team, such as platform. */
+  team: string;
+}
+
+/**
+ * The text that finds the Slack channel that takes review requests for a
+ * team, and the user group that the channel mentions. No channel or group
+ * name is written in this program. It posts nothing.
+ */
+export default function findChannel({ team }: Input) {
+  return `Find the Slack channel that takes review requests for the team
+  ${team}. Do not use any channel name from memory. Search the channels
+  (slack_search_channels) named team-${team}-prs or ${team}-prs, with the
+  team name in lower case and spaces as dashes. Read its purpose. Drop the
+  channel when its purpose says that review requests do not belong there.
+  Answer found yes when a channel is kept, otherwise no. Answer channel: its
+  name (id), or none. Then find its user group: read its last 30 days of
+  posts (slack_read_channel) and take the <!subteam^ID> mention that its
+  review requests use, as written. Never invent a group. Answer group: that
+  mention, or none. Post nothing.`;
+}
