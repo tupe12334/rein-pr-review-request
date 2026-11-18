@@ -46,6 +46,10 @@ The Slack post and the thread reply reach other people. The program posts only w
 - A story batch counts a PR as waiting when it has no approval and no request for its head. A PR that another run asks at the same moment can appear in two batches.
 - The guards, the team rules and the channel rules are prompt text. The walks check the text of each rule, not the answers.
 
+## Known limits
+
+v0.2.0 asks one required other team per head, so a head that needs two other teams asks only the first (tupe12334/rein-pr-review-request#2). Four open warnings are tracked in tupe12334/rein-pr-review-request#3.
+
 ## Develop
 
 Run `git config core.hooksPath .githooks` once. Pushes then run `rein check .`, `scripts/walks.sh` and `shellcheck`. `scripts/walks.sh` walks the entry offline with fixed answers and checks each text. It also checks the line length, the function length and the absence of `==`. The sabotage scripts invert one guard in a copy and check that a walk fails:
