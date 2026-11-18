@@ -29,14 +29,21 @@ EXTRA_NO='ask_team/find_and_post.extra={"found":false,"channel":"none","group":"
 POSTED_YES='ask_team/find_and_post/post_and_record.posted={"posted":true,"links":"<#C123> (https://slack.example/p1)"}'
 POSTED_NO='ask_team/find_and_post/post_and_record.posted={"posted":false,"links":"none"}'
 RECORDED='ask_team/find_and_post/post_and_record.recorded={"recorded":true}'
-REPLIED_YES='reply_and_record.replied={"replied":true,"link":"<#C123> (https://slack.example/p2)"}'
-REPLIED_NO='reply_and_record.replied={"replied":false,"link":"none"}'
-RE_RECORDED='reply_and_record.recorded={"recorded":true}'
+REPLIED_YES='reask_team/reply_and_record.replied={"replied":true,"link":"<#C123> (https://slack.example/p2)"}'
+REPLIED_NO='reask_team/reply_and_record.replied={"replied":false,"link":"none"}'
+RT_TEAM='reask_team.team={"found":true,"team":"platform"}'
+RT_OTHER_NO='reask_team.other={"required":false,"other":"none","reason":"none"}'
+RT_OTHER_YES='reask_team.other={"required":true,"other":"create-team","reason":"code-owner review by create-team is required for src/b.ts"}'
+RT_EXTRA_YES='reask_team.extra={"found":true,"channel":"team-create-team-prs (C456)","group":"<!subteam^S2>"}'
+RT_POSTED_YES='reask_team.posted={"posted":true,"links":"<#C456> (https://slack.example/p3)"}'
+RT_OTHER_KEY='"key":"reask_team.other"'
+RT_EXTRA_KEY='"key":"reask_team.extra"'
+RE_RECORDED='reask_team/reply_and_record.recorded={"recorded":true}'
 TEAM_KEY='"key":"ask_team.team"'
 OWN_KEY='"key":"ask_team/find_and_post.own"'
 EXTRA_KEY='"key":"ask_team/find_and_post.extra"'
 POSTED_KEY='"key":"ask_team/find_and_post/post_and_record.posted"'
-REPLY_KEY='"key":"reply_and_record.replied"'
+REPLY_KEY='"key":"reask_team/reply_and_record.replied"'
 
 # joined: one output line per step, so a walk greps a single line.
 joined() { tr '\n' ' '; }
@@ -111,16 +118,16 @@ expect "the guard counts only human approvals after the last push" \
   'was submitted' --answer "$INFO" --answer "$PLACE_YES"
 expect "a head that changed since the request re-asks in the thread" \
   'Reply once in the Slack thread' --answer "$INFO" --answer "$PLACE_YES" \
-  --answer "$CHANGED"
+  --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_OTHER_NO"
 expect "a dismissed approval re-asks in the thread" \
   'Reply once in the Slack thread' --answer "$INFO" --answer "$PLACE_YES" \
-  --answer "$DISMISSED"
+  --answer "$DISMISSED" --answer "$RT_TEAM" --answer "$RT_OTHER_NO"
 expect "the re-ask reply names the new head and the change in one line" \
   'ready for re-review' --answer "$INFO" --answer "$PLACE_YES" \
-  --answer "$CHANGED"
+  --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_OTHER_NO"
 expect "the re-ask never posts a new top-level message" \
   'Post no new top-level message' --answer "$INFO" --answer "$PLACE_YES" \
-  --answer "$CHANGED"
+  --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_OTHER_NO"
 expect "a re-ask at this head runs once per head" 'already re-asked' \
   --answer "$INFO" --answer "$PLACE_YES" --answer "$REASKED"
 never "a re-ask at this head never replies again" "$REPLY_KEY" \
@@ -130,18 +137,18 @@ expect "the guard reads a dismissal only after the last request" \
   --answer "$PLACE_YES"
 expect "the re-ask reply names the first request thread text" \
   'of each first request' --answer "$INFO" --answer "$PLACE_YES" \
-  --answer "$CHANGED"
+  --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_OTHER_NO"
 expect "a successful re-ask records it on the PR" 'Re-asked at 0123' \
-  --answer "$INFO" --answer "$PLACE_YES" --answer "$CHANGED" \
+  --answer "$INFO" --answer "$PLACE_YES" --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_OTHER_NO" \
   --answer "$REPLIED_YES"
 expect "a successful re-ask returns re-asked" 'Return: re-asked' \
-  --answer "$INFO" --answer "$PLACE_YES" --answer "$CHANGED" \
+  --answer "$INFO" --answer "$PLACE_YES" --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_OTHER_NO" \
   --answer "$REPLIED_YES" --answer "$RE_RECORDED"
 expect "a failed reply returns re-ask failed" 'Return: re-ask failed' \
-  --answer "$INFO" --answer "$PLACE_YES" --answer "$CHANGED" \
+  --answer "$INFO" --answer "$PLACE_YES" --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_OTHER_NO" \
   --answer "$REPLIED_NO"
 never "a failed reply records nothing" 'Re-asked at 0123' \
-  --answer "$INFO" --answer "$PLACE_YES" --answer "$CHANGED" \
+  --answer "$INFO" --answer "$PLACE_YES" --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_OTHER_NO" \
   --answer "$REPLIED_NO"
 expect "a new request finds the review team" "$TEAM_KEY" \
   --answer "$INFO" --answer "$PLACE_YES" --answer "$NOT_ASKED"
@@ -257,6 +264,25 @@ never "a failed post never records a request" 'Review requested in <#channel>' \
   --answer "$INFO" --answer "$PLACE_YES" --answer "$NOT_ASKED" \
   --answer "$TEAM_YES" --answer "$OTHER_NO" --answer "$OWN_YES" \
   --answer "$BATCH" --answer "$POSTED_NO"
+
+expect "a re-ask checks whether the new head needs another team" \
+  "$RT_OTHER_KEY" --answer "$INFO" --answer "$PLACE_YES" \
+  --answer "$CHANGED" --answer "$RT_TEAM"
+expect "a re-ask asks a required other team in its own channel" \
+  'team-create-team-prs or create-team-prs' --answer "$INFO" \
+  --answer "$PLACE_YES" --answer "$CHANGED" --answer "$RT_TEAM" \
+  --answer "$RT_OTHER_YES"
+expect "a re-ask names the reason in the other team's post" \
+  'code-owner review by create-team is required' --answer "$INFO" \
+  --answer "$PLACE_YES" --answer "$CHANGED" --answer "$RT_TEAM" \
+  --answer "$RT_OTHER_YES" --answer "$RT_EXTRA_YES"
+never "a re-ask with no other team required never posts to one" \
+  "$RT_EXTRA_KEY" --answer "$INFO" --answer "$PLACE_YES" \
+  --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_OTHER_NO"
+expect "a re-ask still replies in the thread after the other team is asked" \
+  'ready for re-review' --answer "$INFO" --answer "$PLACE_YES" \
+  --answer "$CHANGED" --answer "$RT_TEAM" --answer "$RT_OTHER_YES" \
+  --answer "$RT_EXTRA_YES" --answer "$RT_POSTED_YES"
 
 # style: lines of 80 columns or fewer, functions of 40 lines or fewer, no ==
 # shellcheck disable=SC2016 # the awk programs read $0, not the shell

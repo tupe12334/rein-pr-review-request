@@ -1,0 +1,97 @@
+interface Input {
+  /** The link of the pull request. */
+  pr: string;
+  /** The title of the pull request. */
+  title: string;
+  /** The owner and repo, such as owner/repo. */
+  repo: string;
+  /** The Jira key, such as ABC-123, or none. */
+  jira: string;
+  /** The login of the author. */
+  author: string;
+  /** The base branch of the pull request. */
+  base: string;
+  /** Each changed file with its CODEOWNERS teams, or none. */
+  owners: string;
+  /** The head commit sha that is asked again. */
+  sha: string;
+  /** What changed since the asked head, in one line. */
+  changed: string;
+  /** The first review request comment of each channel, or none. */
+  thread: string;
+}
+
+interface Team {
+  /** Is a review team found? */
+  found: boolean;
+  /** The review team of the pull request, such as platform, or none. */
+  team: string;
+}
+
+interface Other {
+  /** Is the approval of another team required to merge? */
+  required: boolean;
+  /** The other team's name without the org, or none. */
+  other: string;
+  /** Why that approval is required, in one line, or none. */
+  reason: string;
+}
+
+interface Found {
+  /** Is a channel chosen? */
+  found: boolean;
+  /** The channel as name (id), or none. */
+  channel: string;
+  /** The Slack user group mention as <!subteam^ID>, or none. */
+  group: string;
+}
+
+interface Posted {
+  /** Did the post succeed and get recorded on the PR? */
+  posted: boolean;
+  /** Each post as <#channel> (<permalink>), separated by semicolons. */
+  links: string;
+}
+
+/**
+ * Re-ask a new head in the thread of the first request. When the new head now
+ * needs another team's code-owner approval, that team is asked first, in its
+ * own channel, with the reason. Then the thread is replied to.
+ */
+export default async function reaskTeam({ pr, title, repo, jira, author,
+  base, owners, sha, changed, thread }: Input) {
+  /** The review team: the Jira Team Name, else the team of the author. */
+  const team: Team = await request(@./ask_team/find_team(pr=pr, jira=jira,
+    author=author));
+
+  if (!team.found) {
+    return @./reask_team/reply_and_record(pr=pr, sha=sha, changed=changed,
+      thread=thread);
+  }
+
+  /** Does the new head now need another team's approval to merge? */
+  const other: Other = await request(@./ask_team/check_other_team(pr=pr,
+    repo=repo, base=base, owners=owners, team=team.team));
+
+  if (!other.required) {
+    return @./reask_team/reply_and_record(pr=pr, sha=sha, changed=changed,
+      thread=thread);
+  }
+
+  /** The channel of the other team, found at run time. */
+  const extra: Found = await request(
+    @./ask_team/find_and_post/find_channel(team=other.other));
+
+  if (!extra.found) {
+    return @./reask_team/reply_and_record(pr=pr, sha=sha, changed=changed,
+      thread=thread);
+  }
+
+  /** The other team is asked for this head, in its own channel. */
+  const posted: Posted = await @./ask_team/find_and_post/post_and_record(
+    title=title, reason=other.reason, prs=`${pr} ${sha}`, label=`none`,
+    channels=extra.channel, groups=extra.group);
+
+  return @./reask_team/reply_and_record(pr=pr, sha=sha, changed=changed,
+    thread=thread);
+}

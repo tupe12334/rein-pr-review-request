@@ -75,8 +75,9 @@ export default async function main({ pr }: Input) {
   }
 
   if (guard.asked_before && (guard.dismissed || !guard.already_asked)) {
-    return @./reply_and_record(pr=pr, sha=info.sha, changed=guard.changed,
-      thread=guard.thread);
+    return @./reask_team(pr=pr, title=info.title, repo=info.repo,
+      jira=info.jira, author=info.author, base=info.base, owners=info.owners,
+      sha=info.sha, changed=guard.changed, thread=guard.thread);
   }
 
   if (guard.already_asked) {
