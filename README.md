@@ -23,8 +23,8 @@ The answer is one line: `not workplace`, `already asked`, `not needed`, `already
 
 ## Flow
 
-1. The PR is read: repo, title, Jira key, parent story, author, base branch, whether its `reviewDecision` is APPROVED, the CODEOWNERS team of each changed file, and the head sha (`read_pr.rein`).
-2. A personal repo answers `not workplace` and posts nothing (`check_workplace.rein`). A workplace is an owner with a Slack channel in a workspace the account can read.
+1. The PR is read: repo, title, Jira key, parent story, author, base branch, whether its `reviewDecision` is APPROVED, the CODEOWNERS team of each changed file, read from the base branch, and the head sha (`read_pr.rein`).
+2. A repo whose owner field is not exactly `guiddeco` answers `not workplace` and posts nothing (`check_workplace.rein`). A repo named `guidde-tools` under another owner is not a workplace.
 3. An APPROVED `reviewDecision` answers `not needed`. GitHub folds the required code-owner approvals into that value, so no other team is asked then.
 4. The guards are checked (`check_guards.rein`):
    - A head that already has a `🤖 Review requested in` comment, and that names a team with `for <team>`, is asked for its next required team (step 8). When no team is left, the answer is `already asked`.

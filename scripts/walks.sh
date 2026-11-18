@@ -11,6 +11,7 @@ SHA=0123456789abcdef0123456789abcdef01234567
 PR_FIELDS='"repo":"owner/repo","title":"Fix the thing","jira":"ABC-1","story":"ABC-9","author":"someone","base":"main","owners":"src/a.ts: @owner/platform; src/b.ts: @owner/create-team","sha":"0123456789abcdef0123456789abcdef01234567"'
 INFO="main.info={$PR_FIELDS,\"approved\":false}"
 INFO_APPROVED="main.info={$PR_FIELDS,\"approved\":true}"
+INFO_GUIDDE="main.info={\"repo\":\"someone/guidde-tools\",\"title\":\"Fix the thing\",\"jira\":\"ABC-1\",\"story\":\"ABC-9\",\"author\":\"someone\",\"base\":\"main\",\"owners\":\"src/a.ts: @owner/platform; src/b.ts: @owner/create-team\",\"sha\":\"$SHA\",\"approved\":false}"
 PLACE_YES='main.place={"workplace":true}'
 PLACE_NO='main.place={"workplace":false}'
 NOT_ASKED='main.guard={"already_asked":false,"asked_before":false,"reasked":false,"dismissed":false,"asked_teams":"none","changed":"none","thread":"none","last_post":"none"}'
@@ -103,14 +104,28 @@ expect "the read asks whether reviewDecision is APPROVED" \
   'the reviewDecision field is APPROVED'
 expect "the workplace check runs after the read" '"key":"main.place"' \
   --answer "$INFO"
-expect "the workplace check reads the owner's Slack channels" \
-  'slack_search_channels for that owner name' --answer "$INFO"
+expect "the workplace check reads the repo owner field" \
+  'the owner field of the repository' --answer "$INFO"
+expect "the workplace owner must be exactly guiddeco" \
+  'that login is exactly guiddeco' --answer "$INFO"
+never "the workplace check never reads Slack for the owner" \
+  'slack_search_channels' --answer "$INFO"
 expect "a personal repo returns not workplace" 'Return: not workplace' \
   --answer "$INFO" --answer "$PLACE_NO"
 never "a personal repo never checks the guards" '"key":"main.guard"' \
   --answer "$INFO" --answer "$PLACE_NO"
+expect "a personal repo named guidde posts nothing" \
+  'Return: not workplace' --answer "$INFO_GUIDDE" --answer "$PLACE_NO"
+never "a personal repo named guidde never posts" "$POSTED_KEY" \
+  --answer "$INFO_GUIDDE" --answer "$PLACE_NO"
 expect "the guard runs after a workplace is found" '"key":"main.guard"' \
   --answer "$INFO" --answer "$PLACE_YES"
+
+# CODEOWNERS comes from the base branch, so a PR cannot edit its own owners.
+expect "CODEOWNERS is read only from the base branch" \
+  'Read CODEOWNERS only from the base branch'
+expect "the CODEOWNERS read names the base ref" 'CODEOWNERS?ref=<base>'
+never "a PR that edits CODEOWNERS still gets the base owners" 'ref=<head>'
 
 # The approval comes from reviewDecision on the PR.
 expect "an APPROVED reviewDecision returns not needed" 'it is approved' \
