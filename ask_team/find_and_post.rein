@@ -1,3 +1,7 @@
+import { findChannel } from "./find_and_post/find_channel";
+import { findStory } from "./find_and_post/find_story";
+import { postAndRecord } from "./find_and_post/post_and_record";
+
 interface Input {
   /** The link of the pull request. */
   pr: string;
@@ -38,7 +42,7 @@ export default async function findAndPost({ pr, title, repo, story, team,
   sha }: Input) {
   /** The channel of the review team, found at run time. */
   const own: Found = await request(
-    @./find_and_post/find_channel(team=team));
+    findChannel(team=team));
 
   if (!own.found) {
     return `Return: no channel for ${pr}. Nothing posted.`;
@@ -46,10 +50,10 @@ export default async function findAndPost({ pr, title, repo, story, team,
 
   /** The PRs of the story that wait for review, or this PR alone. */
   const batch: Batch = await request(
-    @./find_and_post/find_story(pr=pr, repo=repo, story=story, sha=sha,
+    findStory(pr=pr, repo=repo, story=story, sha=sha,
     team=team));
 
-  return @./find_and_post/post_and_record(title=title, reason=`none`,
+  return postAndRecord(title=title, reason=`none`,
     prs=batch.prs, label=batch.label, channels=own.channel,
     groups=own.group, team=team);
 }

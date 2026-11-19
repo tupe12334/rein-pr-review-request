@@ -1,3 +1,10 @@
+import { readPr } from "./read_pr";
+import { checkWorkplace } from "./check_workplace";
+import { checkGuards } from "./check_guards";
+import { reaskTeam } from "./reask_team";
+import { askOther } from "./ask_other";
+import { askTeam } from "./ask_team";
+
 interface Input {
   /** The link of the pull request to ask a human to review. */
   pr: string;
@@ -55,10 +62,10 @@ interface Guard {
  */
 export default async function main({ pr }: Input) {
   /** The facts of the pull request that the request needs. */
-  const info: Pr = await request(@./read_pr(pr=pr));
+  const info: Pr = await request(readPr(pr=pr));
 
   /** Is the pull request in a workplace? A personal repository is not. */
-  const place: Place = await request(@./check_workplace(pr=pr,
+  const place: Place = await request(checkWorkplace(pr=pr,
     repo=info.repo));
 
   if (!place.workplace) {
@@ -70,25 +77,25 @@ export default async function main({ pr }: Input) {
   }
 
   /** The requests and dismissals of this head and earlier heads. */
-  const guard: Guard = await request(@./check_guards(pr=pr, sha=info.sha));
+  const guard: Guard = await request(checkGuards(pr=pr, sha=info.sha));
 
   if (guard.reasked) {
     return `Return: already re-asked for ${pr} at this head.`;
   }
 
   if (guard.asked_before && (guard.dismissed || !guard.already_asked)) {
-    return @./reask_team(pr=pr, title=info.title, repo=info.repo,
+    return reaskTeam(pr=pr, title=info.title, repo=info.repo,
       jira=info.jira, author=info.author, base=info.base, owners=info.owners,
       sha=info.sha, changed=guard.changed, thread=guard.thread,
       asked=guard.asked_teams);
   }
 
   if (guard.already_asked) {
-    return @./ask_other(pr=pr, title=info.title, repo=info.repo,
+    return askOther(pr=pr, title=info.title, repo=info.repo,
       jira=info.jira, author=info.author, base=info.base, owners=info.owners,
       sha=info.sha, asked=guard.asked_teams);
   }
 
-  return @./ask_team(pr=pr, title=info.title, repo=info.repo, jira=info.jira,
+  return askTeam(pr=pr, title=info.title, repo=info.repo, jira=info.jira,
     story=info.story, author=info.author, sha=info.sha);
 }

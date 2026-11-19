@@ -5,16 +5,18 @@ A [Rein](https://github.com/tupe12334/rein) program. It asks a human for a revie
 ## Install
 
 ```sh
-rein install -g github:tupe12334/rein-pr-review-request#v0.2.0
+rein install -g github:tupe12334/rein-pr-review-request#v0.3.0
 ```
 
 ## Use
 
-A caller awaits the program with the link of the pull request. The `const` needs a doc comment above it:
+A caller imports the program by name and awaits it with the link of the pull request. The `const` needs a doc comment above it:
 
 ```text
+import { main } from "pr-review-request";
+
 /** Ask a human for a review on Slack, if no request exists for this head. */
-const asked: string = await @pr-review-request/main(pr=<pull request link>);
+const asked: string = await main(pr=<pull request link>);
 ```
 
 - `pr`: the link of the pull request.

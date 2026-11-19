@@ -1,3 +1,6 @@
+import { replyRequest } from "./reply_and_record/reply_request";
+import { recordRequest } from "./reply_and_record/record_request";
+
 interface Input {
   /** The link of the pull request. */
   pr: string;
@@ -30,7 +33,7 @@ export default async function replyAndRecord({ pr, sha, changed, thread }:
   Input) {
   /** The reply in the thread. */
   const replied: Replied = await request(
-    @./reply_and_record/reply_request(pr=pr, sha=sha, changed=changed,
+    replyRequest(pr=pr, sha=sha, changed=changed,
     thread=thread));
 
   if (!replied.replied) {
@@ -40,7 +43,7 @@ export default async function replyAndRecord({ pr, sha, changed, thread }:
 
   /** The comment that records the re-ask on the PR. */
   const recorded: Recorded = await request(
-    @./reply_and_record/record_request(pr=pr, sha=sha, changed=changed,
+    recordRequest(pr=pr, sha=sha, changed=changed,
     link=replied.link));
 
   if (!recorded.recorded) {
