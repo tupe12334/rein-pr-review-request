@@ -1,3 +1,6 @@
+import { findTeam } from "./ask_team/find_team";
+import { findAndPost } from "./ask_team/find_and_post";
+
 interface Input {
   /** The link of the pull request. */
   pr: string;
@@ -29,13 +32,13 @@ interface Team {
 export default async function askTeam({ pr, title, repo, jira, story,
   author, sha }: Input) {
   /** The review team: the Jira Team Name, else the team of the author. */
-  const team: Team = await request(@./ask_team/find_team(pr=pr, jira=jira,
+  const team: Team = await request(findTeam(pr=pr, jira=jira,
     author=author));
 
   if (!team.found) {
     return `Return: no team for ${pr}. Nothing posted.`;
   }
 
-  return @./ask_team/find_and_post(pr=pr, title=title, repo=repo,
+  return findAndPost(pr=pr, title=title, repo=repo,
     story=story, team=team.team, sha=sha);
 }

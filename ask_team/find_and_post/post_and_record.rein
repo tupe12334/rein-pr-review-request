@@ -1,3 +1,6 @@
+import { postRequest } from "./post_and_record/post_request";
+import { recordRequest } from "./post_and_record/record_request";
+
 interface Input {
   /** The title of the pull request, for one PR. */
   title: string;
@@ -36,7 +39,7 @@ export default async function postAndRecord({ title, reason, prs, label,
   channels, groups, team }: Input) {
   /** The Slack posts, one message per channel, with the permalink of each. */
   const posted: Posted = await request(
-    @./post_and_record/post_request(title=title, reason=reason, prs=prs,
+    postRequest(title=title, reason=reason, prs=prs,
     label=label, channels=channels, groups=groups));
 
   if (!posted.posted) {
@@ -45,7 +48,7 @@ export default async function postAndRecord({ title, reason, prs, label,
 
   /** The comments that record each post on each PR. */
   const recorded: Recorded = await request(
-    @./post_and_record/record_request(prs=prs, links=posted.links,
+    recordRequest(prs=prs, links=posted.links,
     team=team));
 
   if (!recorded.recorded) {
